@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import io
 
 # 初期タスクのリストを作成
 if 'tasks' not in st.session_state:
@@ -12,6 +13,12 @@ def add_task(task):
 # タスクを削除する関数
 def delete_task(index):
     del st.session_state.tasks[index]
+
+# CSVに変換してダウンロードできるようにする関数
+def convert_tasks_to_csv():
+    task_df = pd.DataFrame(st.session_state.tasks, columns=["タスク"])
+    csv = task_df.to_csv(index=False)
+    return csv
 
 # タイトル
 st.title('タスク管理アプリ')
@@ -38,3 +45,13 @@ if st.session_state.tasks:
 
 else:
     st.write('現在、タスクはありません。')
+
+# CSVダウンロードボタン
+if st.session_state.tasks:
+    csv = convert_tasks_to_csv()
+    st.download_button(
+        label="タスクをCSVとしてダウンロード",
+        data=csv,
+        file_name='tasks.csv',
+        mime='text/csv'
+    )
