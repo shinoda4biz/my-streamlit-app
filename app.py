@@ -1,31 +1,40 @@
 import streamlit as st
+import pandas as pd
 
-st.title("📝 タスク管理アプリ")
-
-# セッションにタスクリストがなければ初期化
-if "tasks" not in st.session_state:
+# 初期タスクのリストを作成
+if 'tasks' not in st.session_state:
     st.session_state.tasks = []
 
-# タスク入力
-new_task = st.text_input("新しいタスクを入力")
+# タスクを追加する関数
+def add_task(task):
+    st.session_state.tasks.append(task)
 
-# タスク追加
-if st.button("追加") and new_task:
-    st.session_state.tasks.append({"task": new_task, "done": False})
-    st.experimental_rerun()  # ページ再読み込みで表示更新
+# タスクを削除する関数
+def delete_task(index):
+    del st.session_state.tasks[index]
 
-# タスクリスト表示
-st.subheader("📋 タスク一覧")
+# タイトル
+st.title('タスク管理アプリ')
 
-for i, task in enumerate(st.session_state.tasks):
-    col1, col2, col3 = st.columns([0.6, 0.2, 0.2])
-    with col1:
-        st.checkbox(task["task"], value=task["done"], key=f"task_{i}", on_change=lambda i=i: toggle_done(i))
-    with col2:
-        if st.button("削除", key=f"delete_{i}"):
-            st.session_state.tasks.pop(i)
-            st.experimental_rerun()
+# 新しいタスクを追加
+task_input = st.text_input('新しいタスクを入力してください')
 
-# 完了フラグの切り替え関数
-def toggle_done(index):
-    st.session_state.tasks[index]["done"] = not st.session_state.tasks[index]["done"]
+if st.button('タスクを追加'):
+    if task_input:
+        add_task(task_input)
+        st.success('タスクが追加されました！')
+    else:
+        st.error('タスクを入力してください。')
+
+# タスクの表示
+if st.session_state.tasks:
+    st.subheader('タスク一覧')
+    task_df = pd.DataFrame(st.session_state.tasks, columns=["タスク"])
+    for index, row in task_df.iterrows():
+        task_name = row["タスク"]
+        if st.button(f'削除 {task_name}', key=index):
+            delete_task(index)
+            st.success(f'{task_name} が削除されました！')
+
+else:
+    st.write('現在、タスクはありません。')
