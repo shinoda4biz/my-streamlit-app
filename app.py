@@ -53,15 +53,20 @@ if st.button('タスクを追加'):
 # タスクの表示
 if st.session_state.tasks:
     st.subheader('未完了タスク一覧')
+    task_indices_to_remove = []  # チェックされたタスクのインデックスを記録
     for index, task in enumerate(st.session_state.tasks):
         task_name = task['task']
-        completed_checkbox = st.checkbox(f'完了 {task_name}', key=index)
+        completed_checkbox = st.checkbox(f'{task_name}', key=f'checkbox_{index}')
         if completed_checkbox:
             mark_completed(index)
-            st.success(f'{task_name} が完了しました！')
+            task_indices_to_remove.append(index)
         elif st.button(f'削除 {task_name}', key=f'delete_{index}'):
             delete_task(index)
             st.success(f'{task_name} が削除されました！')
+
+    # 完了タスクを削除する
+    for index in reversed(task_indices_to_remove):
+        del st.session_state.tasks[index]
 
 else:
     st.write('現在、未完了のタスクはありません。')
@@ -69,7 +74,7 @@ else:
 # 完了したタスクの表示
 if st.session_state.completed_tasks:
     st.subheader('完了したタスク一覧')
-    for index, task in enumerate(st.session_state.completed_tasks):
+    for task in st.session_state.completed_tasks:
         st.write(task['task'])
 
 # CSVダウンロードボタン
