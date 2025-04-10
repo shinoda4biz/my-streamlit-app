@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import io
+from io import BytesIO
 
 # 初期タスクのリストを作成
 if 'tasks' not in st.session_state:
@@ -17,9 +17,12 @@ def delete_task(index):
 # CSVに変換してダウンロードできるようにする関数
 def convert_tasks_to_csv():
     task_df = pd.DataFrame(st.session_state.tasks, columns=["タスク"])
-    # UTF-8 with BOM (utf-8-sig) でエンコーディングを指定
-    csv = task_df.to_csv(index=False, encoding='utf-8-sig')
-    return csv
+    
+    # バイナリストリームを使用
+    csv_buffer = BytesIO()
+    task_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
+    csv_buffer.seek(0)
+    return csv_buffer
 
 # タイトル
 st.title('タスク管理アプリ')
@@ -49,10 +52,10 @@ else:
 
 # CSVダウンロードボタン
 if st.session_state.tasks:
-    csv = convert_tasks_to_csv()
+    csv_buffer = convert_tasks_to_csv()
     st.download_button(
         label="タスクをCSVとしてダウンロード",
-        data=csv,
+        data=csv_buffer,
         file_name='tasks.csv',
         mime='text/csv'
     )
