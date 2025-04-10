@@ -17,7 +17,8 @@ def delete_task(index):
 # CSVに変換してダウンロードできるようにする関数
 def convert_tasks_to_csv():
     task_df = pd.DataFrame(st.session_state.tasks, columns=["タスク"])
-    csv = task_df.to_csv(index=False)
+    # UTF-8 with BOM (utf-8-sig) でエンコーディングを指定
+    csv = task_df.to_csv(index=False, encoding='utf-8-sig')
     return csv
 
 # タイトル
