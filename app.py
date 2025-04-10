@@ -60,9 +60,6 @@ if st.session_state.tasks:
         if completed_checkbox:
             mark_completed(index)
             task_indices_to_remove.append(index)
-        elif st.button(f'削除 {task_name}', key=f'delete_{index}'):
-            delete_task(index)
-            st.success(f'{task_name} が削除されました！')
 
     # 完了タスクを削除する
     for index in reversed(task_indices_to_remove):
