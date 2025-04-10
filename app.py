@@ -5,22 +5,35 @@ from io import BytesIO
 # 初期タスクのリストを作成
 if 'tasks' not in st.session_state:
     st.session_state.tasks = []
+if 'completed_tasks' not in st.session_state:
+    st.session_state.completed_tasks = []
 
 # タスクを追加する関数
 def add_task(task):
-    st.session_state.tasks.append(task)
+    st.session_state.tasks.append({'task': task, 'completed': False})
 
 # タスクを削除する関数
-def delete_task(index):
-    del st.session_state.tasks[index]
+def delete_task(index, completed=False):
+    if completed:
+        del st.session_state.completed_tasks[index]
+    else:
+        del st.session_state.tasks[index]
+
+# タスクを完了としてマークする関数
+def mark_completed(index):
+    task = st.session_state.tasks.pop(index)
+    task['completed'] = True
+    st.session_state.completed_tasks.append(task)
 
 # CSVに変換してダウンロードできるようにする関数
 def convert_tasks_to_csv():
-    task_df = pd.DataFrame(st.session_state.tasks, columns=["タスク"])
+    task_df = pd.DataFrame(st.session_state.tasks, columns=["タスク", "完了"])
+    completed_df = pd.DataFrame(st.session_state.completed_tasks, columns=["タスク", "完了"])
     
     # バイナリストリームを使用
     csv_buffer = BytesIO()
     task_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
+    completed_df.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
     csv_buffer.seek(0)
     return csv_buffer
 
@@ -39,19 +52,28 @@ if st.button('タスクを追加'):
 
 # タスクの表示
 if st.session_state.tasks:
-    st.subheader('タスク一覧')
-    task_df = pd.DataFrame(st.session_state.tasks, columns=["タスク"])
-    for index, row in task_df.iterrows():
-        task_name = row["タスク"]
-        if st.button(f'削除 {task_name}', key=index):
+    st.subheader('未完了タスク一覧')
+    for index, task in enumerate(st.session_state.tasks):
+        task_name = task['task']
+        completed_checkbox = st.checkbox(f'完了 {task_name}', key=index)
+        if completed_checkbox:
+            mark_completed(index)
+            st.success(f'{task_name} が完了しました！')
+        elif st.button(f'削除 {task_name}', key=f'delete_{index}'):
             delete_task(index)
             st.success(f'{task_name} が削除されました！')
 
 else:
-    st.write('現在、タスクはありません。')
+    st.write('現在、未完了のタスクはありません。')
+
+# 完了したタスクの表示
+if st.session_state.completed_tasks:
+    st.subheader('完了したタスク一覧')
+    for index, task in enumerate(st.session_state.completed_tasks):
+        st.write(task['task'])
 
 # CSVダウンロードボタン
-if st.session_state.tasks:
+if st.session_state.tasks or st.session_state.completed_tasks:
     csv_buffer = convert_tasks_to_csv()
     st.download_button(
         label="タスクをCSVとしてダウンロード",
